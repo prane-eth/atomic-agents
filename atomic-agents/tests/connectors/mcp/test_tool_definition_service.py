@@ -260,3 +260,55 @@ async def test_fetch_definitions_from_session_no_tools(caplog):
     result = await ToolDefinitionService.fetch_definitions_from_session(sess)
     assert result == []
     assert "No tool definitions found" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_fetch_resources_from_session(caplog):
+    """Test fetching resources via session"""
+    sess = AsyncMock()
+    sess.initialize = AsyncMock()
+
+    # Mock resource object as SimpleNamespace-like dict
+    mock_resource = MagicMock()
+    mock_resource.name = "TestResource"
+    mock_resource.description = "A test resource"
+    mock_resource.schema = {"type": "object", "properties": {"id": {"type": "string"}}}
+
+    mock_response = MagicMock()
+    mock_response.resources = [mock_resource]
+
+    sess.list_resources = AsyncMock(return_value=mock_response)
+
+    result = await ToolDefinitionService.fetch_resources_from_session(sess)
+
+    assert len(result) == 1
+    rd = result[0]
+    assert rd.name == "TestResource"
+    assert rd.description == "A test resource"
+    assert rd.schema["properties"]["id"]["type"] == "string"
+
+
+@pytest.mark.asyncio
+async def test_fetch_prompts_from_session(caplog):
+    """Test fetching prompts via session"""
+    sess = AsyncMock()
+    sess.initialize = AsyncMock()
+
+    # Some MCP clients may return prompt objects or dicts
+    mock_prompt = MagicMock()
+    mock_prompt.name = "welcome"
+    mock_prompt.description = "Welcome prompt"
+    mock_prompt.content = "Hello, {{user}}!"
+
+    mock_response = MagicMock()
+    # The helper code checks for response.prompts or response.templates
+    mock_response.prompts = [mock_prompt]
+
+    sess.list_prompts = AsyncMock(return_value=mock_response)
+
+    result = await ToolDefinitionService.fetch_prompts_from_session(sess)
+
+    assert len(result) == 1
+    pd = result[0]
+    assert pd.name == "welcome"
+    assert pd.content == "Hello, {{user}}!"

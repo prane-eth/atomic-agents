@@ -15,7 +15,13 @@ from mcp.client.streamable_http import streamablehttp_client
 from atomic_agents.base.base_io_schema import BaseIOSchema
 from atomic_agents.base.base_tool import BaseTool
 from atomic_agents.connectors.mcp.schema_transformer import SchemaTransformer
-from atomic_agents.connectors.mcp.tool_definition_service import ToolDefinitionService, MCPToolDefinition, MCPTransportType
+from atomic_agents.connectors.mcp.tool_definition_service import (
+    ToolDefinitionService,
+    MCPToolDefinition,
+    MCPTransportType,
+    MCPResourceDefinition,
+    MCPPromptDefinition,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -389,3 +395,80 @@ def fetch_mcp_tools_with_schema(
 
     orchestrator_schema = factory.create_orchestrator_schema(tools)
     return tools, orchestrator_schema
+
+
+# Resource / Prompt convenience API
+def fetch_mcp_resources(
+    mcp_endpoint: Optional[str] = None,
+    transport_type: MCPTransportType = MCPTransportType.HTTP_STREAM,
+    *,
+    client_session: Optional[ClientSession] = None,
+    event_loop: Optional[asyncio.AbstractEventLoop] = None,
+    working_directory: Optional[str] = None,
+) -> List[MCPResourceDefinition]:
+    """
+    Fetch resource definitions from an MCP server (sync).
+    """
+    if client_session is not None:
+
+        async def _gather_resources():
+            return await ToolDefinitionService.fetch_resources_from_session(client_session)  # pragma: no cover
+
+        return cast(asyncio.AbstractEventLoop, event_loop).run_until_complete(_gather_resources())  # pragma: no cover
+    else:
+        service = ToolDefinitionService(mcp_endpoint, transport_type, working_directory)
+        return asyncio.run(service.fetch_resources())
+
+
+async def fetch_mcp_resources_async(
+    mcp_endpoint: Optional[str] = None,
+    transport_type: MCPTransportType = MCPTransportType.HTTP_STREAM,
+    *,
+    client_session: Optional[ClientSession] = None,
+    working_directory: Optional[str] = None,
+) -> List[MCPResourceDefinition]:
+    """
+    Async version of fetch_mcp_resources. Call from within an event loop.
+    """
+    if client_session is not None:
+        return await ToolDefinitionService.fetch_resources_from_session(client_session)
+    service = ToolDefinitionService(mcp_endpoint, transport_type, working_directory)
+    return await service.fetch_resources()
+
+
+def fetch_mcp_prompts(
+    mcp_endpoint: Optional[str] = None,
+    transport_type: MCPTransportType = MCPTransportType.HTTP_STREAM,
+    *,
+    client_session: Optional[ClientSession] = None,
+    event_loop: Optional[asyncio.AbstractEventLoop] = None,
+    working_directory: Optional[str] = None,
+) -> List[MCPPromptDefinition]:
+    """
+    Fetch prompt/template definitions from an MCP server (sync).
+    """
+    if client_session is not None:
+
+        async def _gather_prompts():
+            return await ToolDefinitionService.fetch_prompts_from_session(client_session)  # pragma: no cover
+
+        return cast(asyncio.AbstractEventLoop, event_loop).run_until_complete(_gather_prompts())  # pragma: no cover
+    else:
+        service = ToolDefinitionService(mcp_endpoint, transport_type, working_directory)
+        return asyncio.run(service.fetch_prompts())
+
+
+async def fetch_mcp_prompts_async(
+    mcp_endpoint: Optional[str] = None,
+    transport_type: MCPTransportType = MCPTransportType.HTTP_STREAM,
+    *,
+    client_session: Optional[ClientSession] = None,
+    working_directory: Optional[str] = None,
+) -> List[MCPPromptDefinition]:
+    """
+    Async version of fetch_mcp_prompts. Call from within an event loop.
+    """
+    if client_session is not None:
+        return await ToolDefinitionService.fetch_prompts_from_session(client_session)
+    service = ToolDefinitionService(mcp_endpoint, transport_type, working_directory)
+    return await service.fetch_prompts()

@@ -7,7 +7,13 @@ from .mcp_tool_factory import (
     fetch_mcp_tools_with_schema,
 )
 from .schema_transformer import SchemaTransformer
-from .tool_definition_service import MCPTransportType, MCPToolDefinition, ToolDefinitionService
+from .tool_definition_service import (
+    MCPTransportType,
+    MCPToolDefinition,
+    ToolDefinitionService,
+    MCPResourceDefinition,
+    MCPPromptDefinition,
+)
 
 __all__ = [
     "MCPToolFactory",
@@ -20,4 +26,6 @@ __all__ = [
     "MCPTransportType",
     "MCPToolDefinition",
     "ToolDefinitionService",
+    "MCPResourceDefinition",
+    "MCPPromptDefinition",
 ]
